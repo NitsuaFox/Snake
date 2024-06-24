@@ -1,2 +1,1 @@
 # Snake
-<TITLE>FUCK</TITLE>
