@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Roguelite</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        body {
+            margin: 0;
+            background: #000;
+            font-family: 'Press Start 2P', cursive;
+            color: #0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #g {
+            border: 4px solid #0f0;
+            padding: 10px;
+            background: radial-gradient(circle, #001f00, #000);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            position: relative;
+            box-shadow: 0 0 20px #0f0;
+        }
+        #h {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .i { font-size: 12px; text-shadow: 0 0 5px #0f0; }
+        #c { border: 2px solid #0f0; background: #000; box-shadow: 0 0 10px #0f0; }
+        #s {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #l {
+            list-style: none;
+            padding: 0;
+            text-align: center;
+            text-shadow: 0 0 5px #0f0;
+        }
+        #in {
+            background: #000;
+            border: 2px solid #0f0;
+            color: #0f0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            padding: 5px;
+            width: 60px;
+            text-transform: uppercase;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            box-shadow: 0 0 10px #0f0;
+        }
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            box-shadow: 0 0 5px white;
+        }
+        @keyframes fly {
+            from { transform: translateY(0); }
+            to { transform: translateY(100vh); }
+        }
+    </style>
+</head>
+<body>
+    <div id="g">
+        <div id="h"></div>
+        <canvas id="c"></canvas>
+        <div id="s"><h2>HIGH SCORES</h2><ul id="l"></ul></div>
+    </div>
+<script>
+const c = document.getElementById('c'), x = c.getContext('2d'), W = 600, H = 400, I = 10;
+const G = '#0f0', R = '#f00', B = '#00f', Y = '#ff0', P = '#f0f';
+let w = 30, h = 20, z = W / w, v = I, n = [{ x: w / 2 | 0, y: h / 2 | 0 }], f = {}, b = {}, e = {}, i = {}, d = 'R';
+let r = 0, o = !1, m = 1, t = 0, u = 0, p = !1, q = !1, j = !1, k = [], s = 'm', a = 0, y = ['NEW GAME', 'EXIT'];
+c.width = W; c.height = H;
+
+function U() {
+    document.getElementById('h').innerHTML = `
+        <span class="i">SCORE: ${r.toString().padStart(5, '0')}</span>
+        <span class="i">MULTI: x${m}</span>
+        <span class="i">GRID: ${w}x${h}</span>
+        <span class="i">SPEED: ${((v / I) * 100) | 0}%</span>
+        <span class="i">INVERT: ${t > 0 ? t.toFixed(1) : 'OFF'}</span>
+    `;
+}
+
+function E() {
+    w += 2; h += 2; z = W / w; v += .3; n = n.map(s => ({ x: s.x + 1, y: s.y + 1 })); f.x++; f.y++;
+    if (p) b.x++, b.y++; if (q) e.x++, e.y++; if (j) i.x++, i.y++; U();
+}
+
+function M() {
+    let h = { x: n[0].x, y: n[0].y };
+    switch (d) { case 'U': h.y--; break; case 'D': h.y++; break; case 'L': h.x--; break; case 'R': h.x++; break; }
+    n.unshift(h);
+    if (h.x === f.x && h.y === f.y) { r += m; f = { x: Math.random() * w | 0, y: Math.random() * h | 0 }; U(); }
+    else if (p && h.x === b.x && h.y === b.y) { m++; p = !1; U(); }
+    else if (q && h.x === e.x && h.y === e.y) { E(); q = !1; }
+    else if (j && h.x === i.x && h.y === i.y) { t = 5; j = !1; U(); }
+    else n.pop();
+    if (Math.random() < .02 && !p) { b = { x: Math.random() * w | 0, y: Math.random() * h | 0 }; p = !0; }
+    if (Math.random() < .01 && !q) { e = { x: Math.random() * w | 0, y: Math.random() * h | 0 }; q = !0; }
+    if (Math.random() < .005 && !j) { i = { x: Math.random() * w | 0, y: Math.random() * h | 0 }; j = !0; }
+}
+
+function D() {
+    x.clearRect(0, 0, W, H);
+    x.shadowBlur = 10;
+    x.shadowColor = G;
+    x.fillStyle = R; x.fillRect(f.x * z, f.y * z, z - 1, z - 1); // food
+    if (p) { x.shadowColor = B; x.fillStyle = B; x.beginPath(); x.arc(b.x * z + z / 2, b.y * z + z / 2, z / 2, 0, Math.PI * 2); x.fill(); } // bonus
+    if (q) { x.shadowColor = Y; x.fillStyle = Y; x.beginPath(); x.moveTo(e.x * z, e.y * z); x.lineTo(e.x * z + z, e.y * z); x.lineTo(e.x * z + z / 2, e.y * z + z); x.closePath(); x.fill(); } // expand
+    if (j) { x.shadowColor = P; x.fillStyle = P; x.fillRect(i.x * z, i.y * z, z - 1, z - 1); x.fillStyle = '#000'; x.fillRect(i.x * z + z / 3, i.y * z, z / 3, z); x.fillRect(i.x * z, i.y * z + z / 3, z, z / 3); } // invert
+    x.shadowColor = G; x.fillStyle = G; n.forEach(s => x.fillRect(s.x * z, s.y * z, z - 1, z - 1)); // snake
+}
+
+function C() {
+    const h = n[0];
+    if (h.x < 0 || h.x >= w || h.y < 0 || h.y >= h) s = 'g';
+    for (let i = 1; i < n.length; i++) if (h.x === n[i].x && h.y === n[i].y) { s = 'g'; break; }
+}
+
+function L(T) {
+    if (s === 'm') {
+        x.clearRect(0, 0, W, H); x.shadowBlur = 10; x.shadowColor = G; x.fillStyle = G; x.font = '30px "Press Start 2P"';
+        x.textAlign = 'center';
+        x.fillText('SNAKE ROGUELITE', W / 2, H / 2 - 50);
+        x.textAlign = 'left';
+        y.forEach((i, n) => { x.font = '20px "Press Start 2P"'; x.fillStyle = n === a ? Y : G; x.fillText(i, W / 2 - 70, H / 2 + 30 * n + 30); });
+    } else if (s === 'p') {
+        if (t > 0) { t -= (T - u) / 1000; if (t <= 0) t = 0; U(); }
+        if (T - u > 1000 / v) { M(); C(); u = T; }
+        D();
+    } else if (s === 'g') {
+        x.clearRect(0, 0, W, H); x.shadowBlur = 10; x.shadowColor = G; x.fillStyle = G; x.font = '30px "Press Start 2P"';
+        x.textAlign = 'center';
+        x.fillText('GAME OVER', W / 2, H / 2 - 50);
+        x.fillText(`SCORE: ${r}`, W / 2, H / 2);
+        x.fillText('ENTER INITIALS:', W / 2, H / 2 + 50);
+        x.textAlign = 'left';
+        if (!document.getElementById('in')) {
+            let input = document.createElement('input');
+            input.type = 'text'; input.id = 'in'; input.maxLength = 3;
+            input.style.top = `${H / 2 + 70}px`;
+            document.getElementById('g').appendChild(input);
+            input.focus();
+        }
+    }
+    requestAnimationFrame(L);
+}
+
+function S() {
+    w = 30; h = 20; z = W / w; v = I; n = [{ x: w / 2 | 0, y: h / 2 | 0 }]; d = 'R'; r = 0; m = 1;
+    p = q = j = !1; t = u = 0; f = { x: Math.random() * w | 0, y: Math.random() * h | 0 }; U(); s = 'p';
+}
+
+document.addEventListener('keydown', e => {
+    if (s === 'm') {
+        if (e.key === 'ArrowUp' && a > 0) a--;
+        else if (e.key === 'ArrowDown' && a < y.length - 1) a++;
+        else if (e.key === 'Enter') {
+            if (y[a] === 'NEW GAME') S();
+            else if (y[a] === 'EXIT') alert('Thanks for playing!');
+        }
+    } else if (s === 'p') {
+        let n;
+        switch (e.key) {
+            case 'ArrowUp': n = t > 0 ? 'D' : 'U'; break;
+            case 'ArrowDown': n = t > 0 ? 'U' : 'D'; break;
+            case 'ArrowLeft': n = t > 0 ? 'R' : 'L'; break;
+            case 'ArrowRight': n = t > 0 ? 'L' : 'R'; break;
+        }
+        if (n && n !== ({ 'U': 'D', 'D': 'U', 'L': 'R', 'R': 'L' })[d]) d = n;
+    } else if (s === 'g' && e.key === 'Enter') {
+        let input = document.getElementById('in');
+        if (input) {
+            k.push({ i: input.value.toUpperCase() || 'AAA', s: r });
+            k.sort((a, b) => b.s - a.s); k = k.slice(0, 5);
+            document.getElementById('l').innerHTML = k.map((e, i) => `<li>${i + 1}. ${e.i} - ${e.s}</li>`).join('');
+            document.getElementById('g').removeChild(input);
+            s = 'm';
+        }
+    }
+});
+
+function createStar() {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = `${Math.random() * 100}vw`;
+    star.style.top = '-2px';
+    star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    star.style.animationName = 'fly';
+    star.style.animationTimingFunction = 'linear';
+    star.style.animationIterationCount = 'infinite';
+    document.body.appendChild(star);
+    setTimeout(() => {
+        document.body.removeChild(star);
+    }, 5000);
+}
+
+setInterval(createStar, 100);
+U();
+requestAnimationFrame(L);
+</script>
+</body>
+</html>
