@@ -1,2 +1,2 @@
 # Snake
-awdadaw
+<TITLE>FUCK</TITLE>
